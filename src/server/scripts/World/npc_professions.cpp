@@ -15,6 +15,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "Config.h"
 #include "CreatureScript.h"
 #include "GameObjectScript.h"
 #include "Player.h"
@@ -244,6 +245,27 @@ enum Gossips
     GOSSIP_MENU_OPTION_GO_LEARN_TRIBAL      = 6,
 
 };
+
+// Professions.MultipleSpecializations
+//
+// Every profession specialisation in this file is exclusive for one reason
+// only: the gossip that offers it is hidden once the player holds any
+// specialisation of that profession. Nothing else enforces it - the
+// specialisation is an ordinary spell, and the recipes behind it are gated by
+// trainer_spell.ReqAbility1 naming that spell, so a character holding both
+// Armorsmith and Weaponsmith is offered both sets of recipes with no further
+// change (24 and 6 of them respectively).
+//
+// With this on, each trainer offers its own specialisation whenever the player
+// does not already have that one, instead of requiring they have none at all.
+// Unlearning is untouched and still works per specialisation.
+//
+// Read per gossip rather than cached, so `reload config` applies immediately;
+// this runs when a player talks to a trainer, not in any hot path.
+static inline bool MultipleSpecializationsAllowed()
+{
+    return sConfigMgr->GetOption<bool>("Professions.MultipleSpecializations", false);
+}
 
 /*###
 # formulas to calculate unlearning cost
@@ -481,19 +503,19 @@ public:
                 switch (creature->GetEntry())
                 {
                     case N_TRAINER_TRANSMUTE:                                 //Zarevhi
-                        if (!HasAlchemySpell(player))
+                        if (!player->HasSpell(S_TRANSMUTE) && (MultipleSpecializationsAllowed() || !HasAlchemySpell(player)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_TRANSMUTE,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 1);
                         if (player->HasSpell(S_TRANSMUTE))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_UNLEARN_TRANSMUTE,  GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 4);
                         break;
                     case N_TRAINER_ELIXIR:                                 //Lorokeem
-                        if (!HasAlchemySpell(player))
+                        if (!player->HasSpell(S_ELIXIR) && (MultipleSpecializationsAllowed() || !HasAlchemySpell(player)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_ELIXIR,       GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 2);
                         if (player->HasSpell(S_ELIXIR))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_UNLEARN_ELIXIR,     GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 5);
                         break;
                     case N_TRAINER_POTION:                                 //Lauranna Thar'well
-                        if (!HasAlchemySpell(player))
+                        if (!player->HasSpell(S_POTION) && (MultipleSpecializationsAllowed() || !HasAlchemySpell(player)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_POTION,       GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 3);
                         if (player->HasSpell(S_POTION))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_UNLEARN_POTION,     GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 6);
@@ -651,9 +673,9 @@ public:
                 {
                     case N_TRAINER_SMITHOMNI1:                                     //Myolor Sunderfury
                     case N_TRAINER_SMITHOMNI2:                                     //Krathok Moltenfist
-                        if (!player->HasSpell(S_ARMOR) && !player->HasSpell(S_WEAPON))
+                        if (!player->HasSpell(S_ARMOR) && (MultipleSpecializationsAllowed() || !player->HasSpell(S_WEAPON)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_ARMOR_LEARN,   GOSSIP_SENDER_MAIN,          GOSSIP_ACTION_INFO_DEF + 1);
-                        if (!player->HasSpell(S_WEAPON) && !player->HasSpell(S_ARMOR))
+                        if (!player->HasSpell(S_WEAPON) && (MultipleSpecializationsAllowed() || !player->HasSpell(S_ARMOR)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_WEAPON_LEARN,  GOSSIP_SENDER_MAIN,          GOSSIP_ACTION_INFO_DEF + 2);
                         break;
                     case N_TRAINER_WEAPON1:                                     //Ironus Coldsteel
@@ -675,19 +697,19 @@ public:
             switch (creatureId)
             {
                 case N_TRAINER_HAMMER:                                     //Lilith the Lithe
-                    if (!HasWeaponSub(player))
+                    if (!player->HasSpell(S_HAMMER) && (MultipleSpecializationsAllowed() || !HasWeaponSub(player)))
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_HAMMER,       GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 5);
                     if (player->HasSpell(S_HAMMER))
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_UNLEARN_HAMMER,     GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 8);
                     break;
                 case N_TRAINER_AXE:                                     //Kilram
-                    if (!HasWeaponSub(player))
+                    if (!player->HasSpell(S_AXE) && (MultipleSpecializationsAllowed() || !HasWeaponSub(player)))
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_AXE,          GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 6);
                     if (player->HasSpell(S_AXE))
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_UNLEARN_AXE,        GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 9);
                     break;
                 case N_TRAINER_SWORD:                                     //Seril Scourgebane
-                    if (!HasWeaponSub(player))
+                    if (!player->HasSpell(S_SWORD) && (MultipleSpecializationsAllowed() || !HasWeaponSub(player)))
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_SWORD,        GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 7);
                     if (player->HasSpell(S_SWORD))
                         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_UNLEARN_SWORD,      GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 10);
@@ -968,7 +990,7 @@ public:
                 switch (creature->GetEntry())
                 {
                     case N_TRAINER_SPELLFIRE:                                 //Gidge Spellweaver
-                        if (!HasTailorSpell(player))
+                        if (!player->HasSpell(S_SPELLFIRE) && (MultipleSpecializationsAllowed() || !HasTailorSpell(player)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_SPELLFIRE,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 1);
                         if (player->HasSpell(S_SPELLFIRE))
                         {
@@ -976,7 +998,7 @@ public:
                         }
                         break;
                     case N_TRAINER_MOONCLOTH:                                 //Nasmara Moonsong
-                        if (!HasTailorSpell(player))
+                        if (!player->HasSpell(S_MOONCLOTH) && (MultipleSpecializationsAllowed() || !HasTailorSpell(player)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_MOONCLOTH,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 2);
                         if (player->HasSpell(S_MOONCLOTH))
                         {
@@ -984,7 +1006,7 @@ public:
                         }
                         break;
                     case N_TRAINER_SHADOWEAVE:                                 //Andrion Darkspinner
-                        if (!HasTailorSpell(player))
+                        if (!player->HasSpell(S_SHADOWEAVE) && (MultipleSpecializationsAllowed() || !HasTailorSpell(player)))
                             AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_LEARN_SHADOWEAVE,   GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 3);
                         if (player->HasSpell(S_SHADOWEAVE))
                         {
@@ -1143,11 +1165,19 @@ public:
         //LEATHERWORKING SPEC
         if (player->HasSkill(SKILL_LEATHERWORKING) && player->GetBaseSkillValue(SKILL_LEATHERWORKING) >= 225 && player->GetLevel() >= 40)
         {
-            if (!HasLeatherSpecialty(player) && (player->GetQuestRewardStatus(5141) || player->GetQuestRewardStatus(5143) || player->GetQuestRewardStatus(5144) || player->GetQuestRewardStatus(5145) || player->GetQuestRewardStatus(5146) || player->GetQuestRewardStatus(5148)))
+            bool const anyLeatherQuest = player->GetQuestRewardStatus(5141) || player->GetQuestRewardStatus(5143) || player->GetQuestRewardStatus(5144) || player->GetQuestRewardStatus(5145) || player->GetQuestRewardStatus(5146) || player->GetQuestRewardStatus(5148);
+
+            // The book offers all three at once, so with multiple
+            // specialisations allowed it offers each one the player is still
+            // missing rather than nothing at all.
+            if (anyLeatherQuest && (MultipleSpecializationsAllowed() || !HasLeatherSpecialty(player)))
             {
-                AddGossipItemFor(player, GOSSIP_MENU_GO_SOOTHSAYING_FOR_DUMMIES, GOSSIP_MENU_OPTION_GO_LEARN_DRAGONSCALE, GOSSIP_SENDER_LEARN, GOSSIP_ACTION_INFO_DEF + 5);
-                AddGossipItemFor(player, GOSSIP_MENU_GO_SOOTHSAYING_FOR_DUMMIES, GOSSIP_MENU_OPTION_GO_LEARN_ELEMENTAL, GOSSIP_SENDER_LEARN, GOSSIP_ACTION_INFO_DEF + 6);
-                AddGossipItemFor(player, GOSSIP_MENU_GO_SOOTHSAYING_FOR_DUMMIES, GOSSIP_MENU_OPTION_GO_LEARN_TRIBAL, GOSSIP_SENDER_LEARN, GOSSIP_ACTION_INFO_DEF + 7);
+                if (!player->HasSpell(S_DRAGON))
+                    AddGossipItemFor(player, GOSSIP_MENU_GO_SOOTHSAYING_FOR_DUMMIES, GOSSIP_MENU_OPTION_GO_LEARN_DRAGONSCALE, GOSSIP_SENDER_LEARN, GOSSIP_ACTION_INFO_DEF + 5);
+                if (!player->HasSpell(S_ELEMENTAL))
+                    AddGossipItemFor(player, GOSSIP_MENU_GO_SOOTHSAYING_FOR_DUMMIES, GOSSIP_MENU_OPTION_GO_LEARN_ELEMENTAL, GOSSIP_SENDER_LEARN, GOSSIP_ACTION_INFO_DEF + 6);
+                if (!player->HasSpell(S_TRIBAL))
+                    AddGossipItemFor(player, GOSSIP_MENU_GO_SOOTHSAYING_FOR_DUMMIES, GOSSIP_MENU_OPTION_GO_LEARN_TRIBAL, GOSSIP_SENDER_LEARN, GOSSIP_ACTION_INFO_DEF + 7);
             }
         }
 
