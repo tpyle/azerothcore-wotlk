@@ -22,6 +22,7 @@
 #include "CharmInfo.h"
 #include "CellImpl.h"
 #include "Common.h"
+#include "Config.h"
 #include "ConditionMgr.h"
 #include "DisableMgr.h"
 #include "DynamicObject.h"
@@ -5531,6 +5532,23 @@ void Spell::TakeRunePower(bool didHit)
             player->ModifyPower(POWER_RUNIC_POWER, int32(rp));
 }
 
+// Crafting.AllowBankReagents - see the stanza in worldserver.conf.
+//
+// Reagents are normally required to be in the bags, which for a crafter means
+// shuffling stacks in and out of the bank and being limited by free slots.
+// With this on, the bank counts as reagent storage: Player::HasItemCount
+// already had an inBankAlso parameter for exactly this, and
+// Player::DestroyItemCount has been given the matching one, so the check and
+// the consumption look in the same places.
+//
+// Read here rather than through sWorld's config array to keep the change to
+// two files, and only reached once a spell is known to have a reagent - which
+// is a player action, not a hot path.
+static inline bool BankReagentsAllowed()
+{
+    return sConfigMgr->GetOption<bool>("Crafting.AllowBankReagents", false);
+}
+
 void Spell::TakeReagents()
 {
     if (!m_caster->IsPlayer())
@@ -5576,7 +5594,7 @@ void Spell::TakeReagents()
         if (m_targets.GetItemTargetEntry() == itemid)
             m_targets.SetItemTarget(nullptr);
 
-        p_caster->DestroyItemCount(itemid, itemcount, true);
+        p_caster->DestroyItemCount(itemid, itemcount, true, false, BankReagentsAllowed());
     }
 }
 
@@ -7394,7 +7412,7 @@ SpellCastResult Spell::CheckItems(uint32* param1, uint32* param2)
                         }
                     }
                 }
-                if (!player->HasItemCount(itemid, itemcount))
+                if (!player->HasItemCount(itemid, itemcount, BankReagentsAllowed()))
                     return SPELL_FAILED_REAGENTS;
             }
         }
