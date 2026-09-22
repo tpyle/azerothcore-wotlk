@@ -126,6 +126,25 @@ public:                                                 // modifiers
 
     void ApplyForceReaction(uint32 faction_id, ReputationRank rank, bool apply);
 
+    // Lets a character take on another race's standing with a faction: sets the
+    // war state and the reputation-pane visibility to exactly what is asked
+    // for, even when the character's own race has the faction hidden or
+    // peace-forced. Passing visible = false also takes a faction back out of
+    // the pane, which is how a caller undoes the reveal that changing a
+    // standing performs.
+    //
+    // SetVisible() and SetAtWar() both refuse in those cases, which is right
+    // for a normal character - the client can neither see nor toggle such a
+    // faction. It is wrong for a character whose faction was changed server
+    // side: Initialize() re-derives the flags from its race on every login, so
+    // the adopted side would come back at war after each relog no matter what
+    // was saved, leaving the client refusing to talk to its own faction's NPCs.
+    // Used by mod-factionchoice.
+    // Overwrites only the bits named by mask, so a caller can adopt another
+    // side's VISIBLE/AT_WAR/HIDDEN/PEACE_FORCED defaults and leave the rest
+    // (INACTIVE, RIVAL, SPECIAL) as the character had them.
+    void AdoptFactionState(FactionEntry const* factionEntry, uint32 flags, uint32 mask);
+
     //! Public for chat command needs
     bool SetOneFactionReputation(FactionEntry const* factionEntry, float standing, bool incremental, Optional<ReputationRank> repMaxCap = { });
 

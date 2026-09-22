@@ -134,6 +134,45 @@ ReputationRank ReputationMgr::GetBaseRank(FactionEntry const* factionEntry) cons
     return ReputationToRank(reputation);
 }
 
+void ReputationMgr::AdoptFactionState(FactionEntry const* factionEntry, uint32 flags, uint32 mask)
+{
+    if (!factionEntry || factionEntry->reputationListID < 0)
+        return;
+
+    FactionStateList::iterator itr = _factions.find(factionEntry->reputationListID);
+    if (itr == _factions.end())
+        return;
+
+    FactionState& faction = itr->second;
+
+    uint32 const wanted = (faction.Flags & ~mask) | (flags & mask);
+    if (faction.Flags == wanted)
+        return;
+
+    bool const wasVisible = (faction.Flags & FACTION_FLAG_VISIBLE) != 0;
+    bool const isVisible  = (wanted & FACTION_FLAG_VISIBLE) != 0;
+
+    faction.Flags = wanted;
+    faction.needSend = true;
+    faction.needSave = true;
+
+    if (isVisible && !wasVisible)
+    {
+        if (_visibleFactionCount < 0xFF)
+            ++_visibleFactionCount;
+
+        SendVisible(&faction);
+    }
+    else if (!isVisible && wasVisible)
+    {
+        // Changing a standing reveals a faction (SetOneFactionReputation calls
+        // SetVisible), which would litter the reputation pane with everything
+        // an adopted faction baseline happens to touch. This takes it back out.
+        if (_visibleFactionCount)
+            --_visibleFactionCount;
+    }
+}
+
 void ReputationMgr::ApplyForceReaction(uint32 faction_id, ReputationRank rank, bool apply)
 {
     if (apply)
