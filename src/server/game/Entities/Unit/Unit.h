@@ -1144,7 +1144,7 @@ public:
 
     int32 ModifyPower(Powers power, int32 val, bool withPowerUpdate = true);
 
-    void RewardRage(uint32 damage, uint32 weaponSpeedHitFactor, bool attacker);
+    void RewardRage(uint32 damage, uint32 weaponSpeedHitFactor, bool attacker, Unit* other = nullptr);
 
     [[nodiscard]] uint32 GetCreateMana() const { return GetUInt32Value(UNIT_FIELD_BASE_MANA); }
     void SetCreateMana(uint32 val) { SetUInt32Value(UNIT_FIELD_BASE_MANA, val); }

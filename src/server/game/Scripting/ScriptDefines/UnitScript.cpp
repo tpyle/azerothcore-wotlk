@@ -104,6 +104,16 @@ void ScriptMgr::OnPatchValuesUpdate(Unit const* unit, ByteBuffer& valuesUpdateBu
     CALL_ENABLED_HOOKS(UnitScript, UNITHOOK_ON_PATCH_VALUES_UPDATE, script->OnPatchValuesUpdate(unit, valuesUpdateBuf, posPointers, target));
 }
 
+void ScriptMgr::OnUnitGetLevelForTarget(Unit const* unit, WorldObject const* target, uint8& level)
+{
+    CALL_ENABLED_HOOKS(UnitScript, UNITHOOK_ON_UNIT_GET_LEVEL_FOR_TARGET, script->OnUnitGetLevelForTarget(unit, target, level));
+}
+
+void ScriptMgr::OnUnitRewardRage(Unit* unit, Unit* other, uint32& damage, bool attacker)
+{
+    CALL_ENABLED_HOOKS(UnitScript, UNITHOOK_ON_UNIT_REWARD_RAGE, script->OnUnitRewardRage(unit, other, damage, attacker));
+}
+
 void ScriptMgr::OnUnitUpdate(Unit* unit, uint32 diff)
 {
     CALL_ENABLED_HOOKS(UnitScript, UNITHOOK_ON_UNIT_UPDATE, script->OnUnitUpdate(unit, diff));

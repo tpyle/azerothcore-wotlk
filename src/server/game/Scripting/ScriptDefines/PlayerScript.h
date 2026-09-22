@@ -113,6 +113,7 @@ enum PlayerHook
     PLAYERHOOK_ON_BEFORE_OPEN_ITEM,
     PLAYERHOOK_ON_BEFORE_QUEST_COMPLETE,
     PLAYERHOOK_ON_QUEST_COMPUTE_EXP,
+    PLAYERHOOK_ON_QUEST_COMPUTE_LEVEL,
     PLAYERHOOK_ON_BEFORE_DURABILITY_REPAIR,
     PLAYERHOOK_ON_BEFORE_BUY_ITEM_FROM_VENDOR,
     PLAYERHOOK_ON_BEFORE_STORE_OR_EQUIP_NEW_ITEM,
@@ -458,6 +459,17 @@ public:
 
     // Called after computing the XP reward value for a quest
     virtual void OnPlayerQuestComputeXP(Player* /*player*/, Quest const* /*quest*/, uint32& /*xpValue*/) { }
+
+    /**
+     * @brief Adjust the quest level sent to this player's client.
+     *
+     * -1 is the client's "use my own level" sentinel, resolved when the quest is
+     * drawn rather than when it is cached, so it never goes stale. Reporting -1
+     * for a quest at or below the player and its real level for one above keeps
+     * low level quests from presenting as trivial without hiding that a quest is
+     * genuinely ahead of them.
+     */
+    virtual void OnPlayerQuestComputeLevel(Player* /*player*/, Quest const* /*quest*/, int32& /*level*/) { }
 
     // Before durability repair action, you can even modify the discount value
     virtual void OnPlayerBeforeDurabilityRepair(Player* /*player*/, ObjectGuid /*npcGUID*/, ObjectGuid /*itemGUID*/, float&/*discountMod*/, uint8 /*guildBank*/) { }

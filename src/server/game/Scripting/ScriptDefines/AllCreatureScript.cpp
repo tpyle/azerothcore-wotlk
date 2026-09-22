@@ -57,6 +57,14 @@ void ScriptMgr::OnBeforeCreatureSelectLevel(CreatureTemplate const* cinfo, Creat
     });
 }
 
+void ScriptMgr::OnCreatureGetAggroRange(Creature const* creature, Unit const* target, float& range)
+{
+    ExecuteScript<AllCreatureScript>([&](AllCreatureScript* script)
+    {
+        script->OnCreatureGetAggroRange(creature, target, range);
+    });
+}
+
 void ScriptMgr::OnCreatureSelectLevel(CreatureTemplate const* cinfo, Creature* creature)
 {
     ExecuteScript<AllCreatureScript>([&](AllCreatureScript* script)

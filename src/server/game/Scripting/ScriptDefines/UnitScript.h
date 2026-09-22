@@ -37,6 +37,8 @@ enum UnitHook
     UNITHOOK_IS_CUSTOM_BUILD_VALUES_UPDATE,
     UNITHOOK_SHOULD_TRACK_VALUES_UPDATE_POS_BY_INDEX,
     UNITHOOK_ON_PATCH_VALUES_UPDATE,
+    UNITHOOK_ON_UNIT_GET_LEVEL_FOR_TARGET,
+    UNITHOOK_ON_UNIT_REWARD_RAGE,
     UNITHOOK_ON_UNIT_UPDATE,
     UNITHOOK_ON_DISPLAYID_CHANGE,
     UNITHOOK_ON_UNIT_ENTER_EVADE_MODE,
@@ -94,6 +96,53 @@ public:
     [[nodiscard]] virtual bool ShouldTrackValuesUpdatePosByIndex(Unit const* /*unit*/, uint8 /*updateType*/, uint16 /*index*/) { return false; }
 
     virtual void OnPatchValuesUpdate(Unit const* /*unit*/, ByteBuffer& /*valuesUpdateBuf*/, BuildValuesCachePosPointers& /*posPointers*/, Player* /*target*/) { }
+
+    /**
+     * @brief Adjust the level a unit reports *to one particular observer*.
+     *
+     * Creature::getLevelForTarget is the core's per-target level accessor and is
+     * already special cased for world bosses. It feeds aggro range
+     * (Creature::GetAggroRange), attack distance, the melee skill gap behind
+     * miss/dodge/parry/block (Unit::GetUnitMeleeSkill,
+     * Unit::GetMaxSkillValueForLevel), the glancing and crushing blow gates and
+     * stealth detection - but not experience, which reads Unit::GetLevel().
+     *
+     * Letting a script override it is what allows a creature scaled to the
+     * player's level to behave that way consistently, without touching its real
+     * level (which is shared by every observer).
+     */
+    virtual void OnUnitGetLevelForTarget(Unit const* /*unit*/, WorldObject const* /*target*/, uint8& /*level*/) { }
+
+    /**
+     * @brief This hook runs at the top of Unit::RewardRage, before the rage
+     * formula is applied, and can change the damage figure the formula reads.
+     *
+     * Rage income is a function of damage: rage from a swing is
+     * damage / rageconversion * 7.5, and rage from a hit taken is
+     * damage / rageconversion * 2.5. Anything that scales the damage a unit
+     * deals or takes therefore scales its rage with it, which is not always
+     * wanted - a module that lengthens a fight by cutting damage rather than
+     * by raising health will starve a warrior of rage as a side effect.
+     *
+     * The clamp immediately below the formula makes that worse than it sounds:
+     *
+     *     addRage = std::min(addRage, rageFromDamageDealt * 2.0f);
+     *
+     * which is correct behaviour (it stops low damage hits paying
+     * disproportionate rage through the weapon speed term) but means reduced
+     * damage loses the per-swing component entirely, leaving rage purely
+     * proportional to damage. Adjusting the input here restores the formula's
+     * own behaviour rather than working around it afterwards.
+     *
+     * @param unit The unit that is about to gain the rage
+     * @param other The unit on the other side of the damage event: the victim
+     *              when attacker is true, the attacker when it is false. May
+     *              be nullptr, since not every call site has one.
+     * @param damage The damage the rage formula will read. Modifiable.
+     * @param attacker True when the rage is for damage dealt, false for damage
+     *                 received.
+     */
+    virtual void OnUnitRewardRage(Unit* /*unit*/, Unit* /*other*/, uint32& /*damage*/, bool /*attacker*/) { }
 
     /**
      * @brief This hook runs in Unit::Update

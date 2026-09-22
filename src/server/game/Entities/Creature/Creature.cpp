@@ -3164,7 +3164,17 @@ void Creature::AllLootRemovedFromCorpse()
 uint8 Creature::getLevelForTarget(WorldObject const* target) const
 {
     if (!isWorldBoss() || !target->ToUnit())
-        return Unit::getLevelForTarget(target);
+    {
+        uint8 level = Unit::getLevelForTarget(target);
+
+        // Lets a script report a different level to this particular observer,
+        // which is what world-wide creature scaling needs: the real level is one
+        // value shared by everyone, but aggro range, the melee skill gap and the
+        // glancing/crushing gates are all per target and route through here.
+        sScriptMgr->OnUnitGetLevelForTarget(this, target, level);
+
+        return level;
+    }
 
     uint16 level = target->ToUnit()->GetLevel() + sWorld->getIntConfig(CONFIG_WORLD_BOSS_LEVEL_DIFF);
     if (level < 1)
@@ -3430,6 +3440,10 @@ float Creature::GetAggroRange(Unit const* target) const
 
     // detected range auras
     aggroRadius += target->GetTotalAuraModifier(SPELL_AURA_MOD_DETECTED_RANGE);
+
+    // Lets a script adjust the radius for this creature and target before the
+    // clamps - see AllCreatureScript::OnCreatureGetAggroRange.
+    sScriptMgr->OnCreatureGetAggroRange(this, target, aggroRadius);
 
     // Just in case, we don't want pets running all over the map
     if (aggroRadius > MAX_AGGRO_RADIUS)

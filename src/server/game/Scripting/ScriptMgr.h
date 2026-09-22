@@ -389,6 +389,7 @@ public: /* PlayerScript */
     bool OnPlayerBeforeOpenItem(Player* player, Item* item);
     bool OnPlayerBeforeQuestComplete(Player* player, uint32 quest_id);
     void OnPlayerQuestComputeXP(Player* player, Quest const* quest, uint32& xpValue);
+    void OnPlayerQuestComputeLevel(Player* player, Quest const* quest, int32& level);
     void OnPlayerBeforeDurabilityRepair(Player* player, ObjectGuid npcGUID, ObjectGuid itemGUID, float& discountMod, uint8 guildBank);
     void OnPlayerBeforeBuyItemFromVendor(Player* player, ObjectGuid vendorguid, uint32 vendorslot, uint32& item, uint8 count, uint8 bag, uint8 slot);
     void OnPlayerBeforeStoreOrEquipNewItem(Player* player, uint32 vendorslot, uint32& item, uint8 count, uint8 bag, uint8 slot, ItemTemplate const* pProto, Creature* pVendor, VendorItem const* crItem, bool bStore);
@@ -581,6 +582,8 @@ public: /* UnitScript */
     bool IsCustomBuildValuesUpdate(Unit const* unit, uint8 updateType, ByteBuffer& fieldBuffer, Player const* target, uint16 index);
     bool ShouldTrackValuesUpdatePosByIndex(Unit const* unit, uint8 updateType, uint16 index);
     void OnPatchValuesUpdate(Unit const* unit, ByteBuffer& valuesUpdateBuf, BuildValuesCachePosPointers& posPointers, Player* target);
+    void OnUnitGetLevelForTarget(Unit const* unit, WorldObject const* target, uint8& level);
+    void OnUnitRewardRage(Unit* unit, Unit* other, uint32& damage, bool attacker);
     void OnUnitUpdate(Unit* unit, uint32 diff);
     void OnDisplayIdChange(Unit* unit, uint32 displayId);
     void OnUnitEnterEvadeMode(Unit* unit, uint8 why);
@@ -597,6 +600,7 @@ public: /* AllCreatureScript */
     //void OnAllCreatureUpdate(Creature* creature, uint32 diff);
     void OnBeforeCreatureSelectLevel(CreatureTemplate const* cinfo, Creature* creature, uint8& level);
     void OnCreatureSelectLevel(CreatureTemplate const* cinfo, Creature* creature);
+    void OnCreatureGetAggroRange(Creature const* creature, Unit const* target, float& range);
     void OnCreatureSaveToDB(Creature* creature);
 
 public: /* AllGameobjectScript */

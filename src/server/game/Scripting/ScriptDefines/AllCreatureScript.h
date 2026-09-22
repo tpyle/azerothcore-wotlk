@@ -36,6 +36,25 @@ public:
     virtual void OnCreatureSelectLevel(CreatureTemplate const* /*cinfo*/, Creature* /*creature*/) { }
 
     /**
+     * @brief Runs inside Creature::GetAggroRange after the level and aura
+     * terms have been applied and before the min/max clamps and the global
+     * Rate.Creature.Aggro, and may change the radius.
+     *
+     * The radius is built from the creature's detection_range minus a yard
+     * per level the target is above it, using getLevelForTarget - so a
+     * script that presents a creature at the target's level (world-wide
+     * scaling) also makes every lower-level creature as alert as an at-level
+     * one: 20 yards for a creature that would have noticed the player at 5.
+     * That may or may not be wanted, and the level hook cannot tell an aggro
+     * query from an avoidance query. This one is only ever about aggro.
+     *
+     * @param creature The creature deciding whether it has noticed the target
+     * @param target Who it is deciding about
+     * @param range The radius in yards, before clamps and rate. Modifiable.
+     */
+    virtual void OnCreatureGetAggroRange(Creature const* /*creature*/, Unit const* /*target*/, float& /*range*/) { }
+
+    /**
      * @brief This hook runs after add creature in world
      *
      * @param creature Contains information about the Creature

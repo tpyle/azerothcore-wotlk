@@ -1114,7 +1114,7 @@ uint32 Unit::DealDamage(Unit* attacker, Unit* victim, uint32 damage, CleanDamage
                     if (cleanDamage->hitOutCome == MELEE_HIT_CRIT)
                         weaponSpeedHitFactor *= 2;
 
-                    attacker->RewardRage(rage_damage, weaponSpeedHitFactor, true);
+                    attacker->RewardRage(rage_damage, weaponSpeedHitFactor, true, victim);
                     break;
                 }
             case RANGED_ATTACK:
@@ -1130,10 +1130,10 @@ uint32 Unit::DealDamage(Unit* attacker, Unit* victim, uint32 damage, CleanDamage
         if (cleanDamage && cleanDamage->absorbed_damage)
         {
             if (victim->HasActivePowerType(POWER_RAGE))
-                victim->RewardRage(cleanDamage->absorbed_damage, 0, false);
+                victim->RewardRage(cleanDamage->absorbed_damage, 0, false, attacker);
 
             if (attacker && attacker->HasActivePowerType(POWER_RAGE))
-                attacker->RewardRage(cleanDamage->absorbed_damage, 0, true);
+                attacker->RewardRage(cleanDamage->absorbed_damage, 0, true, victim);
         }
 
         return 0;
@@ -1276,7 +1276,7 @@ uint32 Unit::DealDamage(Unit* attacker, Unit* victim, uint32 damage, CleanDamage
         if (attacker != victim && victim->HasActivePowerType(POWER_RAGE))
         {
             uint32 rageDamage = damage + (cleanDamage ? cleanDamage->absorbed_damage : 0);
-            victim->RewardRage(rageDamage, 0, false);
+            victim->RewardRage(rageDamage, 0, false, attacker);
         }
 
         if (attacker && attacker->IsPlayer())
@@ -2082,7 +2082,7 @@ void Unit::DealMeleeDamage(CalcDamageInfo* damageInfo, bool durabilityLoss)
             case OFF_ATTACK:
             {
                 uint32 weaponSpeedHitFactor = uint32(GetAttackTime(damageInfo->attackType) / 1000.0f * (damageInfo->attackType == BASE_ATTACK ? 3.5f : 1.75f));
-                RewardRage(damageInfo->cleanDamage, weaponSpeedHitFactor, true);
+                RewardRage(damageInfo->cleanDamage, weaponSpeedHitFactor, true, victim);
                 break;
             }
             default:
@@ -16082,8 +16082,13 @@ void Unit::UpdateHeight(float newZ)
         GetVehicleKit()->RelocatePassengers();
 }
 
-void Unit::RewardRage(uint32 damage, uint32 weaponSpeedHitFactor, bool attacker)
+void Unit::RewardRage(uint32 damage, uint32 weaponSpeedHitFactor, bool attacker, Unit* other)
 {
+    // Lets a script correct the damage figure before the formula reads it, for
+    // the benefit of anything that scales the damage of this exchange. See
+    // UnitScript::OnUnitRewardRage.
+    sScriptMgr->OnUnitRewardRage(this, other, damage, attacker);
+
     // Rage formulae https://wowwiki-archive.fandom.com/wiki/Rage#Formulae
     float addRage;
 
