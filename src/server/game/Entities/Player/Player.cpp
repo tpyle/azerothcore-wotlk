@@ -12964,7 +12964,18 @@ uint32 Player::GetResurrectionSpellId()
 // Used in triggers for check "Only to targets that grant experience or honor" req
 bool Player::isHonorOrXPTarget(Unit* victim) const
 {
-    uint8 v_level = victim->GetLevel();
+    // The level this victim presents to *me*, not its real one. For anything
+    // unscaled these are the same value (Unit::getLevelForTarget returns
+    // GetLevel()), so stock behaviour is unchanged - but where a script scales
+    // a creature up to the player, this is what keeps the answer consistent
+    // with the rest of the fight. Aggro range, the melee skill gap and the
+    // experience award already follow the presented level; without this, a
+    // scaled grey still pays experience while silently failing every proc
+    // carrying PROC_ATTR_REQ_EXP_OR_HONOR - Victory Rush and Drain Soul among
+    // them. Note that SpellMgr::LoadSpellProcs gives that attribute to *every*
+    // spell whose DBC ProcFlags include PROC_FLAG_KILL, so this reaches far
+    // more spells than the 15 rows in spell_proc that set it explicitly.
+    uint8 v_level = victim->getLevelForTarget(this);
     uint8 k_grey  = Acore::XP::GetGrayLevel(GetLevel());
 
     // Victim level less gray level
