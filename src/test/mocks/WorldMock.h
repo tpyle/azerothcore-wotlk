@@ -86,6 +86,10 @@ public:
     MOCK_METHOD(void, SetRealmName, (std::string name), ());
     MOCK_METHOD(void, RemoveOldCorpses, ());
     MOCK_METHOD(void, ReloadRBAC, ());
+    // Added to IWorld without the mock being updated, which left every test
+    // that instantiates a NiceMock<WorldMock> failing to compile: the mock
+    // stayed abstract.
+    MOCK_METHOD(SQLQueryHolderCallback&, AddQueryHolderCallback, (SQLQueryHolderCallback&& callback), ());
 };
 #pragma GCC diagnostic pop
 
