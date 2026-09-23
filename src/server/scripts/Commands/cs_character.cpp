@@ -911,7 +911,17 @@ public:
 
     static bool HandleCharacterCheckBankCommand(ChatHandler* handler)
     {
-        handler->GetSession()->SendShowBank(handler->GetSession()->GetPlayer()->GetGUID());
+        // Declared Console::Yes, but it opens *the caller's own* bank, and the
+        // console has no session to open it for: typing this at the console
+        // dereferenced null and took the world server down with it.
+        Player* player = handler->GetSession() ? handler->GetSession()->GetPlayer() : nullptr;
+        if (!player)
+        {
+            handler->SendErrorMessage(LANG_PLAYER_NOT_FOUND);
+            return false;
+        }
+
+        handler->GetSession()->SendShowBank(player->GetGUID());
         return true;
     }
 
