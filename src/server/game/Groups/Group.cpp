@@ -1776,6 +1776,15 @@ void Group::CountTheRoll(Rolls::iterator rollI)
                         ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(roll->itemid);
                         player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_CAST_SPELL, 13262); // Disenchant
 
+                        // The need and greed branches report their win through
+                        // this hook; disenchant did not, which left scripts
+                        // unable to see it at all. No Item is ever created here
+                        // - the item is marked looted in the corpse and only
+                        // the materials are handed over - so the item pointer
+                        // is null and roll->itemid is what identifies what was
+                        // destroyed.
+                        sScriptMgr->OnPlayerGroupRollRewardItem(player, nullptr, item->count, DISENCHANT, roll);
+
                         ItemPosCountVec dest;
                         InventoryResult msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, roll->itemid, item->count);
 
