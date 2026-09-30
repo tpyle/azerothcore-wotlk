@@ -102,6 +102,12 @@ bool Player::UpdateStats(Stats stat)
     // value = ((base_value * base_pct) + total_value) * total_pct
     float value  = GetTotalStatValue(stat);
 
+    // Scripts may add to the final value here, which presents as base stat on the
+    // character sheet. Done at the last moment on purpose: create stats are
+    // overwritten by InitStatsForLevel at login and on every level-up, so a
+    // script that wrote them would have to re-apply after both.
+    sScriptMgr->OnPlayerCalculateStat(this, stat, value);
+
     SetStat(stat, int32(value));
 
     switch (stat)
@@ -207,6 +213,11 @@ bool Player::UpdateAllStats()
     for (uint8 i = STAT_STRENGTH; i < MAX_STATS; ++i)
     {
         float value = GetTotalStatValue(Stats(i));
+        // Same hook as in UpdateStats. UpdateAllStats inlines the calculation
+        // rather than calling UpdateStats, so both sites need it; refactoring
+        // this loop to call UpdateStats would reorder the cascading updates
+        // below and is a larger change than it looks.
+        sScriptMgr->OnPlayerCalculateStat(this, Stats(i), value);
         SetStat(Stats(i), int32(value));
     }
 

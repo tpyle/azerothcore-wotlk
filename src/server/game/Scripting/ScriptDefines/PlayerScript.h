@@ -238,6 +238,7 @@ enum PlayerHook
     PLAYERHOOK_ON_BEFORE_RECEIVE_SPELL_LIST_FROM_TRAINER,
     PLAYERHOOK_ON_GET_TRAINER_SPELL_STATE,
     PLAYERHOOK_ON_AFTER_TRAIN_SPELL,
+    PLAYERHOOK_ON_CALCULATE_STAT,
     PLAYERHOOK_END
 };
 
@@ -288,6 +289,15 @@ public:
 
     // Called when a player's talent points are reset (right before the reset is done)
     virtual void OnPlayerTalentsReset(Player* /*player*/, bool /*noCost*/) { }
+
+    // Called while a primary stat is being recalculated, with the final value by
+    // reference, immediately before it is written to the unit field.
+    //
+    // This fires on every recalculation - login, level-up, equipping, any aura
+    // change - which is the point of it: a script answers with the character's
+    // current bonus each time rather than writing a derived value somewhere and
+    // having to re-apply it after everything that resets create stats.
+    virtual void OnPlayerCalculateStat(Player* /*player*/, Stats /*stat*/, float& /*value*/) { }
 
     // Called when a player attempts to put a point in a talent.
     virtual bool OnPlayerCanLearnTalent(Player* /*player*/, TalentEntry const* /*talent*/, uint32 /*rank*/) { return true; }
