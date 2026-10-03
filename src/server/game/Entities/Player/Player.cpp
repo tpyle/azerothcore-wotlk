@@ -3433,7 +3433,10 @@ void Player::learnSpell(uint32 spellId, bool temporary /*= false*/, bool learnFr
         sScriptMgr->OnPlayerLearnSpell(this, spellId);
 
         // pussywizard: a system message "you have learnt spell X (rank Y)"
-        if (IsInWorld())
+        // A temporary spell has already been sent by addSpell, which has a
+        // branch of its own for them; sending it again puts the spell in the
+        // client's spellbook twice.
+        if (IsInWorld() && !temporary)
             SendLearnPacket(spellId, true);
     }
 
