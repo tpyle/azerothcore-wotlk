@@ -75,6 +75,24 @@ namespace lfg
         LFG_TYPE_RANDOM                              = 6
     };
 
+    /// Synthetic dungeon groups, for a random entry that spans every dungeon of
+    /// a kind rather than one expansion's worth.
+    ///
+    /// A dungeon carries exactly one GroupID in LFGDungeons.dbc and a random
+    /// entry's pool is CachedDungeonMapStore[group], so there is otherwise no
+    /// group that means "all of them". Group 0 looks like one - LoadLFGDungeons
+    /// puts every dungeon in it - but it is unconditional, so it also holds the
+    /// raids and the random entries themselves, and a random entry has no
+    /// entrance coordinates to teleport anybody to.
+    ///
+    /// These two are filled by kind instead, and are only reachable from a DBC
+    /// row that names them. Stock data uses groups 0 to 9 and 11.
+    enum LfgSyntheticGroup
+    {
+        LFG_GROUP_ALL_HEROICS                        = 254,
+        LFG_GROUP_ALL_DUNGEONS                       = 255
+    };
+
     /// Proposal states
     enum LfgProposalState
     {

@@ -341,6 +341,16 @@ namespace lfg
             if (dungeon.type != LFG_TYPE_RANDOM)
                 CachedDungeonMapStore[dungeon.group].insert(dungeon.id);
             CachedDungeonMapStore[0].insert(dungeon.id);
+
+            // And by kind, for the realm's own random entries that span every
+            // dungeon rather than one expansion's. Group 0 cannot serve: it is
+            // filled unconditionally above, so it holds the raids and the
+            // random entries too, and a random entry has no entrance to
+            // teleport to - the areatrigger lookup is skipped for its type.
+            if (dungeon.type == LFG_TYPE_DUNGEON)
+                CachedDungeonMapStore[LFG_GROUP_ALL_DUNGEONS].insert(dungeon.id);
+            else if (dungeon.type == LFG_TYPE_HEROIC)
+                CachedDungeonMapStore[LFG_GROUP_ALL_HEROICS].insert(dungeon.id);
         }
 
         if (reload)
