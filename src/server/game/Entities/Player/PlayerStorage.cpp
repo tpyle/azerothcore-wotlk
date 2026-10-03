@@ -5575,7 +5575,25 @@ bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder cons
     _LoadRandomBGStatus(holder.GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_RANDOM_BG));
 
     // Extra Bonus Talent Points
-    m_extraBonusTalentCount = fields[73].Get<uint8>();
+    //
+    // Read at the width the column declares. characters.extraBonusTalentCount
+    // is INT (characters.sql:103) and SaveToDB writes it as a uint32, but this
+    // read was a uint8 - and for a prepared statement Field::GetData is a
+    // reinterpret_cast over the raw four byte buffer, so it kept the low byte
+    // and discarded the rest. A stored 300 came back as 44, silently, on every
+    // login.
+    //
+    // Bounded at both ends, because CalculateTalentsPoints feeds this through
+    //
+    //     return uint32(talentPointsForLevel * sWorld->getRate(RATE_TALENT));
+    //
+    // and converting a float larger than UINT32_MAX to uint32 is undefined. A
+    // hand-edited -1 read as unsigned would be four billion; 0xFFFF leaves
+    // room for any sane Rate.Talent and is still far more than a character can
+    // spend, since filling every talent in all three trees costs between 211
+    // and 233 points depending on class.
+    int32 const storedBonusTalents = fields[73].Get<int32>();
+    m_extraBonusTalentCount = uint32(std::clamp<int32>(storedBonusTalents, 0, 0xFFFF));
 
     // after spell, bonus talents, and quest load
     InitTalentForLevel();
