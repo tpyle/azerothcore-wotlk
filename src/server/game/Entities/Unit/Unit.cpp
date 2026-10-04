@@ -11006,6 +11006,17 @@ void Unit::UpdateSpeed(UnitMoveType mtype, bool forced)
             speed = min_speed;
     }
 
+    // Scripts may adjust the final rate here, at the last moment before it is
+    // sent. Done here on purpose: this function recomputes the rate from the
+    // auras whenever any of them changes - mounting included - so there is
+    // nowhere a lasting adjustment could be written, and a script has to be
+    // asked again each time.
+    //
+    // Players only, since that is all anything has wanted it for, and creature
+    // speed is recalculated far more often than a player's.
+    if (Player* player = ToPlayer())
+        sScriptMgr->OnPlayerCalculateSpeed(player, mtype, speed);
+
     SetSpeed(mtype, speed, forced);
 }
 

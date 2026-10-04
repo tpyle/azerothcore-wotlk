@@ -421,6 +421,7 @@ public: /* PlayerScript */
     void OnPlayerCustomScalingStatValue(Player* player, ItemTemplate const* proto, uint32& statType, int32& val, uint8 itemProtoStatNumber, uint32 ScalingStatValue, ScalingStatValuesEntry const* ssv);
     void OnPlayerApplyItemModsBefore(Player* player, uint8 slot, bool apply, uint8 itemProtoStatNumber, uint32 statType, int32& val);
     void OnPlayerCalculateStat(Player* player, Stats stat, float& value);
+    void OnPlayerCalculateSpeed(Player* player, UnitMoveType type, float& rate);
     void OnPlayerApplyEnchantmentItemModsBefore(Player* player, Item* item, EnchantmentSlot slot, bool apply, uint32 enchant_spell_id, uint32& enchant_amount);
     void OnPlayerApplyWeaponDamage(Player* player, uint8 slot, ItemTemplate const* proto, float& minDamage, float& maxDamage, uint8 damageIndex);
     bool OnPlayerCanArmorDamageModifier(Player* player);

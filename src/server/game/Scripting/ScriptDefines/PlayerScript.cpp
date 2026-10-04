@@ -672,6 +672,11 @@ void ScriptMgr::OnPlayerCalculateStat(Player* player, Stats stat, float& value)
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_CALCULATE_STAT, script->OnPlayerCalculateStat(player, stat, value));
 }
 
+void ScriptMgr::OnPlayerCalculateSpeed(Player* player, UnitMoveType type, float& rate)
+{
+    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_CALCULATE_SPEED, script->OnPlayerCalculateSpeed(player, type, rate));
+}
+
 void ScriptMgr::OnPlayerApplyEnchantmentItemModsBefore(Player* player, Item* item, EnchantmentSlot slot, bool apply, uint32 enchant_spell_id, uint32& enchant_amount)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_APPLY_ENCHANTMENT_ITEM_MODS_BEFORE, script->OnPlayerApplyEnchantmentItemModsBefore(player, item, slot, apply, enchant_spell_id, enchant_amount));

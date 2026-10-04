@@ -237,6 +237,7 @@ enum PlayerHook
     PLAYERHOOK_ON_GET_TRAINER_SPELL_STATE,
     PLAYERHOOK_ON_AFTER_TRAIN_SPELL,
     PLAYERHOOK_ON_CALCULATE_STAT,
+    PLAYERHOOK_ON_CALCULATE_SPEED,
     PLAYERHOOK_END
 };
 
@@ -300,6 +301,19 @@ public:
     // current bonus each time rather than writing a derived value somewhere and
     // having to re-apply it after everything that resets create stats.
     virtual void OnPlayerCalculateStat(Player* /*player*/, Stats /*stat*/, float& /*value*/) { }
+
+    // Called while a movement speed is being recalculated, with the final rate
+    // by reference, immediately before it is handed to SetSpeed.
+    //
+    // The value is a rate and not a distance: 1.0 is normal, and the yards per
+    // second come from baseMoveSpeed, where running is 7.0 and swimming
+    // 4.722222. A mount is a rate of 2.0 or so, in the same number.
+    //
+    // UpdateSpeed recomputes this from the auras every time any of them
+    // changes, and mounting is one of those, so there is nowhere to write a
+    // lasting speed adjustment - which is the point of the hook: a script
+    // answers with its own contribution each time instead.
+    virtual void OnPlayerCalculateSpeed(Player* /*player*/, UnitMoveType /*type*/, float& /*rate*/) { }
 
     // Called when a player attempts to put a point in a talent.
     virtual bool OnPlayerCanLearnTalent(Player* /*player*/, TalentEntry const* /*talent*/, uint32 /*rank*/) { return true; }
