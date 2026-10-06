@@ -238,6 +238,7 @@ enum PlayerHook
     PLAYERHOOK_ON_AFTER_TRAIN_SPELL,
     PLAYERHOOK_ON_CALCULATE_STAT,
     PLAYERHOOK_ON_CALCULATE_SPEED,
+    PLAYERHOOK_ON_QUEST_OFFER_REWARD_TEXT,
     PLAYERHOOK_END
 };
 
@@ -314,6 +315,16 @@ public:
     // lasting speed adjustment - which is the point of the hook: a script
     // answers with its own contribution each time instead.
     virtual void OnPlayerCalculateSpeed(Player* /*player*/, UnitMoveType /*type*/, float& /*rate*/) { }
+
+    // Called while SMSG_QUESTGIVER_OFFER_REWARD is being built, after the
+    // locale lookup and before the text goes into the packet, so a script can
+    // say something in the turn-in box that the quest itself cannot know.
+    //
+    // The text in quest_offer_reward is one static string shared by every
+    // player, and this packet is the last thing sent before the reward is
+    // handed over - so anything a script decides about THIS turn-in has to be
+    // decided by now, not in OnPlayerCompleteQuest, which runs afterwards.
+    virtual void OnPlayerQuestOfferRewardText(Player* /*player*/, Quest const* /*quest*/, std::string& /*text*/) { }
 
     // Called when a player attempts to put a point in a talent.
     virtual bool OnPlayerCanLearnTalent(Player* /*player*/, TalentEntry const* /*talent*/, uint32 /*rank*/) { return true; }

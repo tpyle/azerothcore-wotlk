@@ -670,6 +670,11 @@ void PlayerMenu::SendQuestGiverOfferReward(Quest const* quest, ObjectGuid npcGUI
     if (QuestOfferRewardLocale const* questOfferRewardLocale = sObjectMgr->GetQuestOfferRewardLocale(quest->GetQuestId()))
         ObjectMgr::GetLocaleString(questOfferRewardLocale->RewardText, locale, RewardText);
 
+    // After the locale, so a script edits the string the player would actually
+    // have read, and not the enUS one behind it.
+    if (Player* player = _session->GetPlayer())
+        sScriptMgr->OnPlayerQuestOfferRewardText(player, quest, RewardText);
+
     WorldPacket data(SMSG_QUESTGIVER_OFFER_REWARD, 400);    // guess size
     data << npcGUID;
     data << uint32(quest->GetQuestId());
