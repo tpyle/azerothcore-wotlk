@@ -1267,7 +1267,10 @@ void Player::UpdateArea(uint32 newArea)
     else
         RemoveByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_SANCTUARY);
 
-    uint32 const areaRestFlag = (GetTeamId(true) == TEAM_ALLIANCE)
+    // The side the character plays for, not the one its race was born to:
+    // with the team overridden (mod-factionchoice), an orc playing Alliance
+    // rests in Alliance inns.
+    uint32 const areaRestFlag = (GetTeamId() == TEAM_ALLIANCE)
                                     ? AREA_FLAG_REST_ZONE_ALLIANCE
                                     : AREA_FLAG_REST_ZONE_HORDE;
     if (area && area->flags & areaRestFlag)
@@ -1325,16 +1328,19 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea, bool force)
 
     // in PvP, any not controlled zone (except zone->team == 6, default case)
     // in PvE, only opposition team capital
+    // "Opposition" by the side the character plays for, not its race's: a
+    // Forsaken playing Alliance is not a Horde intruder in Stormwind, and
+    // flagging her there spreads to everyone who heals or buffs her.
     switch (zone->team)
     {
     case AREATEAM_ALLY:
         pvpInfo.IsInHostileArea =
-            GetTeamId(true) != TEAM_ALLIANCE &&
+            GetTeamId() != TEAM_ALLIANCE &&
             (sWorld->IsPvPRealm() || zone->flags & AREA_FLAG_CAPITAL);
         break;
     case AREATEAM_HORDE:
         pvpInfo.IsInHostileArea =
-            GetTeamId(true) != TEAM_HORDE &&
+            GetTeamId() != TEAM_HORDE &&
             (sWorld->IsPvPRealm() || zone->flags & AREA_FLAG_CAPITAL);
         break;
     case AREATEAM_NONE:
