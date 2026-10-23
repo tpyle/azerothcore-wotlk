@@ -97,8 +97,9 @@ void Battlefield::HandlePlayerEnterZone(Player* player, uint32 /*zone*/)
     TryRejoinAfterLogout(player); // relog: auto-rejoin, skip invite below
 
     // Xinef: do not invite players on taxi
-    // GMs are not invited to war (see InvitePlayerToWar), so skip queue and slot tracking too
-    if (!player->IsInFlight() && !player->IsGameMaster())
+    // GMs are not invited to war (see InvitePlayerToWar), so skip queue and slot tracking too;
+    // neither are unaligned characters, who have no side to fight for
+    if (!player->IsInFlight() && !player->IsGameMaster() && !player->IsUnaligned())
     {
         // If battle is started,
         // If not full of players > invite player to join the war
@@ -215,7 +216,7 @@ void Battlefield::InvitePlayersInZoneToQueue()
 
 void Battlefield::InvitePlayerToQueue(Player* player)
 {
-    if (player->IsGameMaster()) // GMs are not invited to war, so don't queue them either
+    if (player->IsGameMaster() || player->IsUnaligned()) // GMs are not invited to war, so don't queue them either
         return;
 
     if (PlayersInQueue[player->GetTeamId()].count(player->GetGUID()))
@@ -243,7 +244,7 @@ void Battlefield::InvitePlayersInZoneToWar()
     ForEachPlayerInZone([this](Player* player)
     {
         // Skip GMs: they are never invited, so they would linger in PlayersWillBeKick forever
-        if (player->IsGameMaster())
+        if (player->IsGameMaster() || player->IsUnaligned())
             return;
 
         if (IsPlayerInWarOrInvited(player))
@@ -261,7 +262,8 @@ void Battlefield::InvitePlayerToWar(Player* player)
     if (!player)
         return;
 
-    if (player->IsGameMaster())
+    // an unaligned character has no side to fight for
+    if (player->IsGameMaster() || player->IsUnaligned())
         return;
 
     /// @todo : needed ?

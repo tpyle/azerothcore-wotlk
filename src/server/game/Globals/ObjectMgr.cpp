@@ -7148,7 +7148,14 @@ uint32 ObjectMgr::GetNearestTaxiNode(float x, float y, float z, uint32 mapid, ui
     {
         TaxiNodesEntry const* node = sTaxiNodesStore.LookupEntry(i);
 
-        if (!node || node->map_id != mapid || (!node->MountCreatureID[teamId == TEAM_ALLIANCE ? 1 : 0] && node->MountCreatureID[0] != 32981)) // dk flight
+        if (!node || node->map_id != mapid)
+            continue;
+
+        // TEAM_NEUTRAL (Player::GetTaxiTeamId) takes a node either side can fly from
+        bool const hasMount = teamId == TEAM_NEUTRAL
+            ? (node->MountCreatureID[0] || node->MountCreatureID[1])
+            : node->MountCreatureID[teamId == TEAM_ALLIANCE ? 1 : 0] != 0;
+        if (!hasMount && node->MountCreatureID[0] != 32981) // dk flight
             continue;
 
         uint8  field   = (uint8)((i - 1) / 32);

@@ -1269,10 +1269,12 @@ void Player::UpdateArea(uint32 newArea)
 
     // The side the character plays for, not the one its race was born to:
     // with the team overridden (mod-factionchoice), an orc playing Alliance
-    // rests in Alliance inns.
-    uint32 const areaRestFlag = (GetTeamId() == TEAM_ALLIANCE)
-                                    ? AREA_FLAG_REST_ZONE_ALLIANCE
-                                    : AREA_FLAG_REST_ZONE_HORDE;
+    // rests in Alliance inns. An unaligned character rests in both.
+    uint32 areaRestFlag = (GetTeamId() == TEAM_ALLIANCE)
+                              ? AREA_FLAG_REST_ZONE_ALLIANCE
+                              : AREA_FLAG_REST_ZONE_HORDE;
+    if (IsUnaligned())
+        areaRestFlag = AREA_FLAG_REST_ZONE_ALLIANCE | AREA_FLAG_REST_ZONE_HORDE;
     if (area && area->flags & areaRestFlag)
         SetRestFlag(REST_FLAG_IN_FACTION_AREA);
     else
@@ -1330,17 +1332,18 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea, bool force)
     // in PvE, only opposition team capital
     // "Opposition" by the side the character plays for, not its race's: a
     // Forsaken playing Alliance is not a Horde intruder in Stormwind, and
-    // flagging her there spreads to everyone who heals or buffs her.
+    // flagging her there spreads to everyone who heals or buffs her. An
+    // unaligned character is an intruder in neither side's territory.
     switch (zone->team)
     {
     case AREATEAM_ALLY:
         pvpInfo.IsInHostileArea =
-            GetTeamId() != TEAM_ALLIANCE &&
+            GetTeamId() != TEAM_ALLIANCE && !IsUnaligned() &&
             (sWorld->IsPvPRealm() || zone->flags & AREA_FLAG_CAPITAL);
         break;
     case AREATEAM_HORDE:
         pvpInfo.IsInHostileArea =
-            GetTeamId() != TEAM_HORDE &&
+            GetTeamId() != TEAM_HORDE && !IsUnaligned() &&
             (sWorld->IsPvPRealm() || zone->flags & AREA_FLAG_CAPITAL);
         break;
     case AREATEAM_NONE:

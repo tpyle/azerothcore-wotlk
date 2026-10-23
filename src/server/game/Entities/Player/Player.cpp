@@ -6030,6 +6030,15 @@ void Player::SetFactionForRace(uint8 race)
     SetFaction(rEntry ? rEntry->FactionID : 0);
 }
 
+bool Player::IsUnaligned() const
+{
+    // FACTION_MASK_PLAYER as well, so a mind control or disguise that lends a
+    // creature's faction does not count.
+    FactionTemplateEntry const* entry = GetFactionTemplateEntry();
+    return entry && (entry->ourMask & FACTION_MASK_PLAYER) &&
+        !(entry->ourMask & (FACTION_MASK_ALLIANCE | FACTION_MASK_HORDE));
+}
+
 ReputationRank Player::GetReputationRank(uint32 faction) const
 {
     FactionEntry const* factionEntry = sFactionStore.LookupEntry(faction);
@@ -10526,8 +10535,9 @@ bool Player::ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc 
     // can use this taxi.
     // The side played, not the race's: a node's mount list is per side, and a
     // Forsaken playing Alliance (mod-factionchoice) found no Horde mount at a
-    // gryphon master, so could not fly at all.
-    uint32 mount_display_id = sObjectMgr->GetTaxiMountDisplayId(sourcenode, GetTeamId(), npc == nullptr || (sourcenode == 315 && IsClass(CLASS_DEATH_KNIGHT, CLASS_CONTEXT_TAXI)));
+    // gryphon master, so could not fly at all. An unaligned character flies
+    // from either side's masters, so takes whichever mount the node has.
+    uint32 mount_display_id = sObjectMgr->GetTaxiMountDisplayId(sourcenode, GetTeamId(), npc == nullptr || IsUnaligned() || (sourcenode == 315 && IsClass(CLASS_DEATH_KNIGHT, CLASS_CONTEXT_TAXI)));
 
     // in spell case allow 0 model
     if ((mount_display_id == 0 && spellid == 0) || sourcepath == 0)
@@ -10702,7 +10712,7 @@ void Player::SendTaxiNodeStatusMultiple()
         if (!creature->HasNpcFlag(UNIT_NPC_FLAG_FLIGHTMASTER))
             return;
 
-        uint32 nearestNode = sObjectMgr->GetNearestTaxiNode(*creature, GetTeamId(true));
+        uint32 nearestNode = sObjectMgr->GetNearestTaxiNode(*creature, GetTaxiTeamId());
         if (!nearestNode)
             return;
 

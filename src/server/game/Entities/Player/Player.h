@@ -2140,6 +2140,15 @@ public:
     void SetFactionForRace(uint8 race);
     void setTeamId(TeamId teamid) { m_team = teamid; };
 
+    // Wears a player faction template that belongs to neither the Alliance nor
+    // the Horde (mod-factionchoice's neutral side). The team stays one of the
+    // two, because so much indexes by it; this is what marks the character as
+    // at home on both sides and out of the war between them.
+    [[nodiscard]] bool IsUnaligned() const;
+    // The side whose flight masters serve the character: TEAM_NEUTRAL, for
+    // either, when it is unaligned.
+    [[nodiscard]] TeamId GetTaxiTeamId() const { return IsUnaligned() ? TEAM_NEUTRAL : GetTeamId(); }
+
     void InitDisplayIds();
 
     bool IsAtGroupRewardDistance(WorldObject const* pRewardSource) const;
